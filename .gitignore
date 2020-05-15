@@ -1,3 +1,10 @@
+# ignore pycharm project settings
+.idea/
+# ignore spotipy caches
+.cache-*
+# ignore my secrets
+.secret.conf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
