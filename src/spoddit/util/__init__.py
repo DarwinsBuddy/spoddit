@@ -17,11 +17,13 @@ def get_nested(data_dict, path, separator='.'):
 
 def parse_config(config_path, defaults=None):
 
+    # TODO: make parse config module available within the whole module to prevent parsing it too often
+
     if defaults is None:
         defaults = {}
 
     config = None
-
+    logging.debug(f'Parsing config {config_path}')
     # config file location passed by arguments
     if Path(config_path).is_file():
         config = cp.ConfigParser()

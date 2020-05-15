@@ -17,6 +17,9 @@ A reddit scraper for music with spotify integration
 `CLIENT_ID` client id of our spotify application
 `CLIENT_SECRET` client secret of our spotify application
 
+### `[Reddit]`
+`CLIENT_ID`  client id of our reddit application
+
 ## `spoddit.conf`
 
 ### `[Spotify]`

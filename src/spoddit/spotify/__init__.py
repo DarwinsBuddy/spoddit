@@ -27,6 +27,7 @@ def get_all(paged_function_handle, limit=0, start_page=0):
 
 
 class SpotifySession:
+    __SECRET_CONF = '.secret.conf'
     _REQUIRED_SPOTIFY_PERMISSIONS = ' '.join([
         'playlist-read-private',
         'playlist-modify-private',
@@ -39,7 +40,7 @@ class SpotifySession:
         self.username = username
         logger.debug('Logging in...')
         self.redirect_url = f'localhost:{port}'
-        self.secrets = util.parse_config('.secret.conf')
+        self.secrets = util.parse_config(self.__SECRET_CONF)
         if self.secrets is None or not self.secrets.has_section('Spotify'):
             logger.error(f'Malformed or missing .secrets.conf. Create one base on provided .secret-template.conf')
             exit(3)
@@ -84,4 +85,4 @@ class SpotifySession:
                 track = item['track']
                 print(track['name'] + ' - ' + track['artists'][0]['name'])
         except (HTTPError, SpotifyException) as e:
-            exit(2)
+            exit(e.errno)

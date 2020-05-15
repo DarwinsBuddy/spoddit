@@ -46,7 +46,7 @@ def main(argv=None):
     # # parser.add_argument('--playlist', metavar='p', type=str, nargs='+')
     # args = parser.parse_args(remaining_argv)
 
-    spoddit.auth(args.config or None)
+    session = spoddit.SpodditSession(args.config or None)
 
     return 0
 
