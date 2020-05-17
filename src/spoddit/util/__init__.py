@@ -13,6 +13,29 @@ def get_nested(data_dict, path, separator='.'):
     return reduce(operator.getitem, path.split(separator), data_dict)
 
 
+def listify(x):
+    return x if type(x) == list else [x]
+
+
+def merge_dict(dict1, dict2):
+    """
+    Merge dicts and keep values of common keys in a list
+    :param dict1: dictionary to be merged
+    :param dict2: dictionary to be merged
+    :return: a merged dictionary where similar key's values are merged into distinct lists
+    """
+    merged_dict = {}
+    for key in list(set(list(dict1.keys()) + list(dict2.keys()))):
+        if key in dict1 and key in dict2:
+            # if both dicts have the same key, we merge the values
+            merged_dict[key] = list(set(listify(dict1[key]) + listify(dict2[key])))
+        else:
+            # otherwise we simply listify the values
+            merged_dict[key] = listify(dict.get(dict1, key) or dict.get(dict2, key))
+
+    return merged_dict
+
+
 class ThreadedHttpServer(Thread):
     __AVAILABLE_PORTS = [1337, 1234, 1235, 1236]
     is_running = False

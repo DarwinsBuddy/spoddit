@@ -1,6 +1,9 @@
+import logging
 import sys
+from logging.config import fileConfig
 
 import spoddit
+from spoddit import config
 
 
 def parse_args(argv):
@@ -42,6 +45,13 @@ def main(argv=None):
 
     # connect to spotify and reddit
     session = spoddit.SpodditSession()
+
+    fileConfig('log.conf')
+    logger = logging.getLogger()
+
+    logger.info('Scraping reddit...')
+    for subreddit, subreddit_config in config.scraper_map.items():
+        logger.debug(session.reddit_session.get_links(subreddit, limit=subreddit_config['limit']))
 
     return 0
 

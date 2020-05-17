@@ -29,7 +29,7 @@ class SpodditSession:
         # Log into Reddit
         logger.info(f'Authenticating against Reddit')
         self.reddit_session = RedditSession()
-        if self.reddit_session.is_logged_in():
+        if self.reddit_session.is_authenticated():
             logger.debug(f'Successfully authenticated at Reddit')
         else:
             logger.error(f'Failed to authenticate at Reddit')

@@ -1,10 +1,20 @@
 import logging
+import re
 
 import praw
 
 from spoddit import secrets
+from spoddit.util import merge_dict
 
 logger = logging.getLogger(__name__)
+
+# TODO: extend them for deezer, etc.
+_MEDIA_LINK_REGEXES = [
+    # youtube
+    r'(?P<youtube>https:\/\/youtu\.be\/.*|https:\/\/www\.youtube\.com\/watch\?v\=.*)',
+    # spotify
+    r'(?P<spotify>https:\/\/open\.spotify\.com\/track\/.*)'
+]
 
 
 class RedditSession:
@@ -17,12 +27,43 @@ class RedditSession:
             exit(3)
         logger.info('Authenticating at Reddit')
         try:
-            self.api = praw.Reddit(client_id=secrets.get('Reddit', 'CLIENT_ID'), client_secret=None, user_agent="spoddit")
+            self._api = praw.Reddit(client_id=secrets.get('Reddit', 'CLIENT_ID'), client_secret=None,
+                                    user_agent="spoddit")
         except Exception as e:
             logging.error('Unable to authenticate at Reddit. Check the validity of your client secret')
             logging.error(f'{e}')
-            self.api = None
+            self._api = None
             exit(5)
 
-    def is_logged_in(self):
-        return self.api is not None
+    def is_authenticated(self):
+        """
+        Checks if client is authenticated
+        :return: true if we are authenticated, otherwise false
+        """
+        return self._api is not None
+
+    def get_links(self, subreddit, limit):
+        subs = list(self._api.subreddit(subreddit).hot(limit=limit))
+        link_dict = {}
+        # this is way faster, than iterating over all
+        combined_regex = "|".join(_MEDIA_LINK_REGEXES)
+        for sub in subs:
+            # we could use sub.url, but in case someone posted more than one url, we have to check the text
+            # and sub.url just returns the link to the submissions first comment
+            if sub.url.startswith(sub.shortlink):
+                search_text = sub.selftext
+            else:
+                search_text = sub.url
+
+            media_link_matches = re.match(combined_regex, search_text)
+            if media_link_matches is not None:
+                link_dict = merge_dict(link_dict, media_link_matches.groupdict())
+
+        # get rid of all None elements within our lists
+        for key, value in link_dict.items():
+            link_dict[key] = [v for v in value if v]
+        return link_dict
+
+    # delegate everything else to the api
+    def __getattr__(self, name):
+        return getattr(self._api, name)

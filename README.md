@@ -1,3 +1,4 @@
+
 # spoddit
 
 A reddit scraper for music with spotify integration
@@ -14,19 +15,25 @@ A reddit scraper for music with spotify integration
 ## `.secrets.conf`
 
 ### `[Spotify]`
-`CLIENT_ID` client id of our spotify application
-`CLIENT_SECRET` client secret of our spotify application
+* `CLIENT_ID` client id of our spotify application
+* `CLIENT_SECRET` client secret of our spotify application
 
 ### `[Reddit]`
-`CLIENT_ID`  client id of our reddit application
+* `CLIENT_ID`  client id of our reddit application
 
 ## `spoddit.conf`
 
 ### `[Spotify]`
-`username` Your username, which you want to be authenticated with
+* `username` Your username, which you want to be authenticated with
 
 ### `[General]`
-`port` Used for OAuth2 redirect. If the specified port doesn't work out for you, simply change it to another spare one on your system. Note: This port will only be used temporarily, while authenticating against the Spotify API.
+* `port` Used for OAuth2 redirect. If the specified port doesn't work out for you, simply change it to another spare one on your system.
+> Note: This port will only be used temporarily, while authenticating against the Spotify API.
+
+### `[r/<SOME_SUBREDDIT>]`
+> Note: For every section in this config file starting with `r/`, you will create a scrape job for the eponymous subreddit. Below options allow you to configure this. e.g. where the scraped music goes, e.g. how much is getting scraped, etc.
+* `playlist` name of the playlist going to be extended by scraped tracks of this subreddit
+* `limit` = `50` How many submissions from `hot` are being scraped
 
 ## `log.conf`
 Python logger configuration. See [python logging config file format](https://docs.python.org/3/library/logging.config.html#logging-config-fileformat)
