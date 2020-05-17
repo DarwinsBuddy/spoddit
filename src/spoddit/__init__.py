@@ -1,28 +1,19 @@
 import logging
-
-from . import util
+from . import util, config
 from .reddit import RedditSession
 from .spotify import SpotifySession
 
 _DEFAULT_CONFIG_PATH = './spoddit.conf'
-
 logger = logging.getLogger(__name__)
 
 
 class SpodditSession:
 
-    def __init__(self, config_path=None):
-        self.config_path = config_path or _DEFAULT_CONFIG_PATH
-        defaults = {
-            'spotify': {
-                'username': ''
-            },
-            'general': {
-                'port': 1236
-            }
-        }
-        config = util.parse_config(self.config_path, defaults)
-
+    def __init__(self):
+        """
+        A SpodditSession establishes a wrapped session to reddit (anonymous)
+        and one to spotify (authenticated)
+        """
         # Log into spotify
         username = config.get('Spotify', 'username')
         port = config.get('General', 'port')
@@ -43,4 +34,3 @@ class SpodditSession:
         else:
             logger.error(f'Failed to authenticate at Reddit')
             exit(2)
-

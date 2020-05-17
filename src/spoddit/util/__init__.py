@@ -2,8 +2,6 @@ import logging
 from functools import reduce
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
-from pathlib import Path
-import configparser as cp
 
 import requests
 import operator
@@ -13,36 +11,6 @@ logger = logging.getLogger(__name__)
 
 def get_nested(data_dict, path, separator='.'):
     return reduce(operator.getitem, path.split(separator), data_dict)
-
-
-def parse_config(config_path, defaults=None):
-
-    # TODO: make parse config module available within the whole module to prevent parsing it too often
-
-    if defaults is None:
-        defaults = {}
-
-    config = None
-    logging.debug(f'Parsing config {config_path}')
-    # config file location passed by arguments
-    if Path(config_path).is_file():
-        config = cp.ConfigParser()
-        config.read([config_path])
-        defaults.update(dict(config.items()))
-        logger.debug(dict(config.items())) if config is not None else logging.debug('No config provided')
-
-    if config is not None:
-        logger.debug('CONFIG:')
-        for section in config.sections():
-
-            logger.debug(f'{section}')
-            for (key, value) in config.items(section):
-                logger.debug(f'  {key} = {value}')
-    else:
-        logger.warning(f'config "{config_path}" not found')
-
-    return config
-
 
 
 class ThreadedHttpServer(Thread):

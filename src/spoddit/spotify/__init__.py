@@ -6,7 +6,7 @@ from spotipy import SpotifyException
 
 import logging
 
-from .. import util
+from spoddit import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,7 @@ class SpotifySession:
         self.username = username
         logger.debug('Logging in...')
         self.redirect_url = f'localhost:{port}'
-        self.secrets = util.parse_config(self.__SECRET_CONF)
-        if self.secrets is None or not self.secrets.has_section('Spotify'):
+        if not secrets.has_section('Spotify'):
             logger.error(f'Malformed or missing .secrets.conf. Create one base on provided .secret-template.conf')
             exit(3)
         self.scheme = 'http://'
@@ -67,8 +66,8 @@ class SpotifySession:
         token = spotipy.util.prompt_for_user_token(
             username=self.username,
             scope=self._REQUIRED_SPOTIFY_PERMISSIONS,
-            client_id=self.secrets.get('Spotify', 'CLIENT_ID'),
-            client_secret=self.secrets.get('Spotify', 'CLIENT_SECRET'),
+            client_id=secrets.get('Spotify', 'CLIENT_ID'),
+            client_secret=secrets.get('Spotify', 'CLIENT_SECRET'),
             redirect_uri=f'{self.scheme}{self.redirect_url}',
             show_dialog=True)
         if token:
