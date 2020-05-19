@@ -32,8 +32,10 @@ A reddit scraper for music with spotify integration
 
 ### `[r/<SOME_SUBREDDIT>]`
 > Note: For every section in this config file starting with `r/`, you will create a scrape job for the eponymous subreddit. Below options allow you to configure this. e.g. where the scraped music goes, e.g. how much is getting scraped, etc.
-* `playlist` name of the playlist going to be extended by scraped tracks of this subreddit
+* `playlist_name` name of the playlist going to be extended by scraped tracks of this subreddit
 * `limit` = `50` How many submissions from `hot` are being scraped
+* `public` True/False Whether or not the playlist should be public or not
+* `description` A user defined description for this playlist
 
 ## `log.conf`
 Python logger configuration. See [python logging config file format](https://docs.python.org/3/library/logging.config.html#logging-config-fileformat)

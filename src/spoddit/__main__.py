@@ -1,57 +1,45 @@
+import argparse
 import logging
 import sys
+from functools import partial
 from logging.config import fileConfig
 
 import spoddit
 from spoddit import config
-
-
-def parse_args(argv):
-    # TODO: Integrate arguments to overwrite specific options of our config
-    # import config
-    # # Do argv default this way, as doing it in the functional
-    # # declaration sets it at compile time.
-    # if argv is None:
-    #     argv = sys.argv
-
-    # # Parse any config specification
-    # # We make this parser with add_help=False so that
-    # # it doesn't parse -h and print help.
-    # arg_parser = argparse.ArgumentParser(
-    #    description=__doc__,  # printed with -h/--help
-    #    # Don't mess with format of description
-    #    # formatter_class=argparse.RawDescriptionHelpFormatter,
-    #    # Turn off help, so we print all options in response to -h
-    #    add_help=False
-    # )
-    # args, remaining_argv = arg_parser.parse_known_args()
-    # # Parse rest of arguments
-    # # Don't suppress add_help here so it will handle -h
-    # parser = argparse.ArgumentParser(
-    #    # Inherit options from config_parser
-    #    parents=[config_parser]
-    # )
-    # parser.set_defaults(**defaults)
-    # # parser.add_argument('--subreddit', metavar='r', type=str, nargs=1)
-    # # parser.add_argument('--playlist', metavar='p', type=str, nargs='+')
-    # args = parser.parse_args(remaining_argv)
-    pass
+from spoddit.config import parse_args, dry_handle
 
 
 def main(argv=None):
 
     # parse args
-    parse_args(argv)
+    args = parse_args(argv)
 
-    # connect to spotify and reddit
-    session = spoddit.SpodditSession()
+    # TODO maybe there is a way to make this publicly available after arg parse
+    dry = partial(dry_handle, (args.dry_run or False))
 
     fileConfig('log.conf')
     logger = logging.getLogger()
 
-    logger.info('Scraping reddit...')
+    if args.dry_run:
+        logger.info('Running in dry-run mode')
+    logger.debug(args)
+
+    # connect to spotify and reddit
+    session = spoddit.SpodditSession()
+
     for subreddit, subreddit_config in config.scraper_map.items():
-        logger.debug(session.reddit_session.get_links(subreddit, limit=subreddit_config['limit']))
+        logger.info(f'Scraping reddit for {subreddit}')
+        links = session.reddit_session.get_links(subreddit, limit=subreddit_config['limit'])
+        for key, values in links.items():
+            logger.info(f'Found {len(values)} {key} links')
+        logger.info('Creating playlist')
+        playlist = dry(session.spotify_session.create_playlist, **subreddit_config)
+        if playlist is not None or args.dry_run:
+            # logger.debug('Querying for youtube track details...')
+            logger.warning('[TBD] YOUTUBE Support: Not yet implemented')
+            spotify_tracks = links['spotify']
+            # logger.debug('Filtering already imported spotify tracks...')
+            # logger.debug('Adding spotify tracks...')
 
     return 0
 

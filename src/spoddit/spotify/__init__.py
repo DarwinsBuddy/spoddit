@@ -52,6 +52,8 @@ class SpotifySession:
             exit(3)
         self.scheme = 'http://'
         self._api = self._login()
+        # get current user
+        self.user = self._api.current_user()
 
     def is_logged_in(self):
         """
@@ -75,6 +77,26 @@ class SpotifySession:
         :return: tracks
         """
         return get_all(partial(self._api.playlist_tracks, playlist_id))
+
+    def create_playlist(self, playlist_name, public=False, description='Created by spoddit'):
+        """
+        Creates a playlist in the logged in users spotify account, if it doesn't exist yet
+        :param playlist_name: name for the playlist to create
+        :param public: if the playlist should be publicly available
+        :param description: A description provided for the playlist
+        """
+        playlists = self.get_playlists()
+        if playlist_name in [p['name'] for p in playlists]:
+            logger.warning(f'Cannot create playlist "{playlist_name}" as it already exists')
+            return None
+        else:
+            logger.info(f'Creating playlist "{playlist_name}"')
+            return self._api.user_playlist_create(
+                user=self.user['id'],
+                name=playlist_name,
+                public=public,
+                description=description
+            )
 
     def _login(self):
         """
