@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 
 def dry_handle(dry_run, function_handle, *args, **kwargs):
     if dry_run:
-        logger.info(f'[DRY] Skipping {function_handle}')
+        logger.info(f'[DRY] Skipping {function_handle.__name__}')
         return None
     else:
         # filter out all non-expected keywords of the function_handle

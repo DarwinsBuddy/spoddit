@@ -5,7 +5,7 @@ from functools import partial
 from logging.config import fileConfig
 
 import spoddit
-from spoddit import config
+from spoddit import config, extractor
 from spoddit.config import parse_args, dry_handle
 
 
@@ -35,10 +35,19 @@ def main(argv=None):
         logger.info('Creating playlist')
         playlist = dry(session.spotify_session.create_playlist, **subreddit_config)
         if playlist is not None or args.dry_run:
-            # logger.debug('Querying for youtube track details...')
-            logger.warning('[TBD] YOUTUBE Support: Not yet implemented')
+            # TODO extract info from reddit alone ? (r/Music has pretty titles, but maybe make this configurable,
+            #      as this may not be always the case)
+            logger.debug('Looking up youtube track details...')
+            yt_tracks = list(filter(None, extractor.extract(links['youtube'])))
+            logger.debug('Found following youtube tracks:')
+            for t in yt_tracks:
+                logger.debug(f'{t["artist"]} - {t["title"]}') if t['track'] is None else logger.debug(f'{t["track"]}')
+            # TODO look up spotify track ID for yt tracks w/ spotify search
             spotify_tracks = links['spotify']
-            # logger.debug('Filtering already imported spotify tracks...')
+            # TODO extract spotify track ID from spotify track links
+            # TODO build a distinct set of all track IDs and filter out all already imported tracks
+            # logger.debug('Filtering already imported tracks...')
+            # TODO add other tracks to spotify playlist
             # logger.debug('Adding spotify tracks...')
 
     return 0
