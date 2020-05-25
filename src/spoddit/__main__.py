@@ -4,6 +4,8 @@ import sys
 from functools import partial
 from logging.config import fileConfig
 
+from IPython.lib import pretty
+
 import spoddit
 from spoddit import config, extractor
 from spoddit.config import parse_args, dry_handle
@@ -35,21 +37,35 @@ def main(argv=None):
         logger.info('Creating playlist')
         playlist = dry(session.spotify_session.create_playlist, **subreddit_config)
         if playlist is not None or args.dry_run:
+            tracks = []
             # TODO extract info from reddit alone ? (r/Music has pretty titles, but maybe make this configurable,
             #      as this may not be always the case)
             logger.debug('Looking up youtube track details...')
-            yt_tracks = list(filter(None, extractor.extract(links['youtube'])))
+            yt_tracks = [
+                spoddit.TrackRecipe.from_track_dict(td) for td in
+                list(filter(None, extractor.get_youtube_metadata(links['youtube'])))
+            ]
             logger.debug('Found following youtube tracks:')
             for t in yt_tracks:
-                logger.debug(f'{t["artist"]} - {t["title"]}') if t['track'] is None else logger.debug(f'{t["track"]}')
-            # TODO look up spotify track ID for yt tracks w/ spotify search
-            spotify_tracks = links['spotify']
+                logger.debug(f'>>> {t}')
+            # look up spotify track ID for yt tracks w/ spotify search
+            tracks += session.spotify_session.search_tracks(yt_tracks)
+            # spotify_tracks = links['spotify']
             # TODO extract spotify track ID from spotify track links
-            # TODO build a distinct set of all track IDs and filter out all already imported tracks
-            # logger.debug('Filtering already imported tracks...')
-            # TODO add other tracks to spotify playlist
-            # logger.debug('Adding spotify tracks...')
-
+            if args.dry_run:
+                logger.debug('[DRY] Skipping adding tracks to playlist')
+            else:
+                logger.debug('Filtering already imported tracks...')
+                # build a distinct set of all track IDs and filter out all already imported tracks
+                playlist_tracks = [t['track'] for t in session.spotify_session.get_playlist_tracks(playlist['id'])]
+                new_tracks = session.spotify_session.diff_track_list(playlist_tracks, tracks)
+                logger.debug(f'Found {len(new_tracks)}/{len(tracks)} new tracks')
+                if len(tracks) > 0:
+                    # add other tracks to spotify playlist
+                    logger.debug('Adding spotify tracks...')
+                    session.spotify_session.add_to_playlist(playlist['id'], new_tracks)
+                else:
+                    logger.debug('Nothing to add')
     return 0
 
 

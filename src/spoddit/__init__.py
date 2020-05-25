@@ -7,6 +7,36 @@ _DEFAULT_CONFIG_PATH = './spoddit.conf'
 logger = logging.getLogger(__name__)
 
 
+class TrackRecipe:
+    @staticmethod
+    def from_track_dict(track_dict):
+        return TrackRecipe(
+            artist=track_dict['artist'],
+            title=track_dict['title'],
+            track=track_dict['track']
+        )
+
+    def __init__(self, artist, title, track):
+        self.artist = artist
+        self.title = title
+        self.track = track
+
+    def __repr__(self):
+        return f'track={self.track}, artist={self.artist}, title={self.title}'
+
+    def get_query(self):
+        """
+        Extracts a query
+        :return: query
+        """
+        if self.artist is not None and self.title is not None:
+            return f'{self.artist} {self.title}'
+        elif self.track is not None:
+            return f'{self.track}'
+        else:
+            return None
+
+
 class SpodditSession:
 
     def __init__(self):

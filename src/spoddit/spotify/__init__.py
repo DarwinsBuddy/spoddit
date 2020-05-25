@@ -11,7 +11,7 @@ from spoddit import secrets
 logger = logging.getLogger(__name__)
 
 
-def get_all(paged_function_handle, limit=0, start_page=0):
+def get_all(paged_function_handle, limit=0, start_page=0, **kwargs):
     """
     Bundles several calls which are paginated by the spotify api
     :param paged_function_handle:
@@ -20,17 +20,20 @@ def get_all(paged_function_handle, limit=0, start_page=0):
     :return: result set
     """
     # TODO: integrate some rate limit check deep down, as this could be a problem
+    last_items_length = 0
     page_index = start_page
     items = []
     while True:
-        page = paged_function_handle(offset=page_index * limit)
+        page = paged_function_handle(offset=page_index * limit, **kwargs)
         total = page['total']
         limit = page['limit']
         items += page['items']
         page_index += 1
-        if len(items) >= total:
-            logger.debug(f'items collected so far: {len(items)}')
+        logger.debug(f'[PAGINATION] {len(items)}/{total} items collected')
+        # if we got all items, or nothing changed since our last iteration, return the result
+        if len(items) >= total or last_items_length == len(items):
             return items
+        last_items_length = len(items)
 
 
 class SpotifySession:
@@ -88,7 +91,7 @@ class SpotifySession:
         playlists = self.get_playlists()
         if playlist_name in [p['name'] for p in playlists]:
             logger.warning(f'Cannot create playlist "{playlist_name}" as it already exists')
-            return None
+            return next((p for p in playlists if p['name'] == playlist_name), None)
         else:
             logger.info(f'Creating playlist "{playlist_name}"')
             return self._api.user_playlist_create(
@@ -130,6 +133,53 @@ class SpotifySession:
                 print(track['name'] + ' - ' + track['artists'][0]['name'])
         except (HTTPError, SpotifyException) as e:
             exit(e.errno)
+
+    def search_tracks(self, track_recipes):
+        """
+        Given a list of track recipes a list of spotify track instances are returned
+        :param track_recipes: a list of track recipes (see spoddit.TrackRecipe)
+        :return:
+        """
+        tracks = []
+        queries = list(filter(None, [tr.get_query() for tr in track_recipes]))
+        for q in queries:
+            search_result = self._api.search(q=q, limit=1, type='track')
+            found_tracks = search_result['tracks']['items']
+            if len(found_tracks) > 0:
+                logger.debug(f'Found track {found_tracks[0]["id"]} -- "{found_tracks[0]["name"]}" q="{q}"')
+                tracks += [found_tracks[0]]
+            else:
+                logger.warning(f'No track found for query "{q}"')
+
+        return tracks
+
+    def get_playlist_tracks(self, playlist_id):
+        return get_all(self._api.playlist_tracks, playlist_id=playlist_id)
+
+    def add_to_playlist(self, playlist_id, tracks):
+        if len(tracks) > 0:
+            logger.debug(f'Adding: user={self.user["id"]} playlist_id={playlist_id} tracks={[t["id"] for t in tracks]}')
+            return self._api.user_playlist_add_tracks(
+                self.user['id'], playlist_id,
+                [t['id'] for t in tracks])
+
+    @staticmethod
+    def diff_track_list(track_list1, track_list2):
+        """
+        Returns the difference denoted by
+        track_list1 - track_list2 by id
+        i.e. every track in track_list2 which is not in track_list1
+        :param track_list1:
+        :param track_list2:
+        :return: difference track-list1 - track_list2
+        """
+        track_ids1 = set([t['id'] for t in track_list1])
+        track_ids2 = set([t['id'] for t in track_list2])
+        diff_ids = list(track_ids2.difference(track_ids1))
+        if len(diff_ids) > 0:
+            return [next((t for t in track_list2 if t['id'] in tid)) for tid in diff_ids]
+        else:
+            return []
 
     # delegate everything else to the api
     def __getattr__(self, name):
