@@ -9,12 +9,14 @@ from spoddit.util import merge_dict
 logger = logging.getLogger(__name__)
 
 # TODO: extend them for deezer, etc.
-_MEDIA_LINK_REGEXES = [
+_MEDIA_LINK_REGEXPS = [
     # youtube
     r'(?P<youtube>https:\/\/youtu\.be\/.*|https:\/\/www\.youtube\.com\/watch\?v\=.*)',
     # spotify
     r'(?P<spotify>https:\/\/open\.spotify\.com\/track\/.*)'
 ]
+
+_COMBINED_MEDIA_LINK_REGEXPS = "|".join(_MEDIA_LINK_REGEXPS)
 
 
 class RedditSession:
@@ -42,12 +44,17 @@ class RedditSession:
         """
         return self._api is not None
 
-    def get_links(self, subreddit, limit):
-        subs = list(self._api.subreddit(subreddit).hot(limit=limit))
+    @staticmethod
+    def get_links(submissions):
+        """
+        Extracts links from submission provided by the reddit api
+        :param submissions:
+        :return: dict of link recognized by our regexps
+        """
         link_dict = {}
-        # this is way faster, than iterating over all
-        combined_regex = "|".join(_MEDIA_LINK_REGEXES)
-        for sub in subs:
+        # this is way faster, than iterating over all regexps separately
+
+        for sub in submissions:
             # we could use sub.url, but in case someone posted more than one url, we have to check the text
             # and sub.url just returns the link to the submissions first comment
             if sub.url.startswith(sub.shortlink):
@@ -55,7 +62,7 @@ class RedditSession:
             else:
                 search_text = sub.url
 
-            media_link_matches = re.match(combined_regex, search_text)
+            media_link_matches = re.match(_COMBINED_MEDIA_LINK_REGEXPS, search_text)
             if media_link_matches is not None:
                 link_dict = merge_dict(link_dict, media_link_matches.groupdict())
 

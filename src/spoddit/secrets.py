@@ -15,7 +15,6 @@ logger.debug(f'<<<<<<<< {_SECRETS_PATH} >>>>>>>>')
 if Path(_SECRETS_PATH).is_file():
     _secrets = ConfigParser()
     _secrets.read([_SECRETS_PATH])
-    logger.debug(dict(_secrets.items())) if _secrets is not None else logger.debug('No config provided')
 
 if _secrets is None:
     logger.error(f'{_SECRETS_PATH} not found')

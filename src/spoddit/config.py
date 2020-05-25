@@ -50,7 +50,6 @@ def dry_handle(dry_run, function_handle, *args, **kwargs):
         return None
     else:
         # filter out all non-expected keywords of the function_handle
-        logger.debug(function_handle.__code__.co_varnames)
         expected = {keyword: kwargs[keyword] for keyword in function_handle.__code__.co_varnames if keyword in kwargs}
         return function_handle(*args, **expected)
 
