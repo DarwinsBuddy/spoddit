@@ -6,6 +6,8 @@ from threading import Thread
 import requests
 import operator
 
+from . import regexps
+
 logger = logging.getLogger(__name__)
 
 

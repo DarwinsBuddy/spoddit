@@ -1,22 +1,11 @@
 import logging
-import re
 
 import praw
 
-from spoddit import secrets
+from spoddit import secrets, util
 from spoddit.util import merge_dict
 
 logger = logging.getLogger(__name__)
-
-# TODO: extend them for deezer, etc.
-_MEDIA_LINK_REGEXPS = [
-    # youtube
-    r'(?P<youtube>https:\/\/youtu\.be\/.*|https:\/\/www\.youtube\.com\/watch\?v\=.*)',
-    # spotify
-    r'(?P<spotify>https:\/\/open\.spotify\.com\/track\/.*)'
-]
-
-_COMBINED_MEDIA_LINK_REGEXPS = "|".join(_MEDIA_LINK_REGEXPS)
 
 
 class RedditSession:
@@ -29,7 +18,9 @@ class RedditSession:
             exit(3)
         logger.info('Authenticating at Reddit')
         try:
-            self._api = praw.Reddit(client_id=secrets.get('Reddit', 'CLIENT_ID'), client_secret=None,
+            # noinspection PyTypeChecker
+            self._api = praw.Reddit(client_id=secrets.get('Reddit', 'CLIENT_ID'),
+                                    client_secret=None,
                                     user_agent="spoddit")
         except Exception as e:
             logging.error('Unable to authenticate at Reddit. Check the validity of your client secret')
@@ -62,7 +53,7 @@ class RedditSession:
             else:
                 search_text = sub.url
 
-            media_link_matches = re.match(_COMBINED_MEDIA_LINK_REGEXPS, search_text)
+            media_link_matches = util.regexps.COMBINED_MEDIA_LINK_REGEX.match(search_text)
             if media_link_matches is not None:
                 link_dict = merge_dict(link_dict, media_link_matches.groupdict())
 

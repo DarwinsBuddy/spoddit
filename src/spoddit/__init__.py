@@ -1,27 +1,10 @@
 import logging
-import re
 from collections import defaultdict
 
 from . import util, config
 from .reddit import RedditSession
 from .spotify import SpotifySession
 
-_TRACK_REGEXPS = [
-    # regex to match artist and title (most common form)
-    r'(?P<artist>.+)\s+[^\s\w]{1}\s+(?P<title>.*)',
-    # regex to match the whole string, if above form(s) are not applicable
-    r'(?P<track>.+)'
-]
-
-_COMBINED_REGEX = re.compile(r'|'.join(_TRACK_REGEXPS))
-
-# regex to get rid of those [Official something] tags
-_CLEANUP_REGEXPS = [
-    re.compile(r'(?P<part1>.*)(\[.*\])(?P<part2>.*)'),
-    re.compile(r'(?P<part1>.*)(\(.*\))(?P<part2>.*)'),
-]
-
-_TRIM_REGEXP = re.compile(r'[^\w]*(?P<trimmed>[\w\s]*(\s+[^\w]{1}\s+)[\s\w]*)[^\w]*')
 
 _DEFAULT_CONFIG_PATH = './spoddit.conf'
 logger = logging.getLogger(__name__)
@@ -32,22 +15,32 @@ class TrackRecipe:
     @staticmethod
     def _cleanup_title(title):
         cleaned_text = title
-        for regex in _CLEANUP_REGEXPS:
+        for regex in util.regexps.CLEANUP_REGEXPS:
             cleanup_matches = regex.search(title)
             if cleanup_matches is not None:
                 cleaned_text = cleanup_matches['part1'] + cleanup_matches['part2']
             else:
                 cleaned_text = title
-        trimmed_matches = _TRIM_REGEXP.search(cleaned_text)
+        trimmed_matches = util.regexps.TRIM_REGEX.search(cleaned_text)
         if trimmed_matches is not None:
             return trimmed_matches.groupdict()['trimmed']
         else:
             return cleaned_text
 
     @staticmethod
+    def from_spotify_link(link):
+        matches = util.regexps.SPOTIFY_ID_REGEX.search(link)
+        if matches is not None:
+            spotify_id = matches.groupdict().get('spotify_id')
+            if spotify_id is not None:
+                return TrackRecipe(spotify_id=spotify_id)
+        else:
+            return None
+
+    @staticmethod
     def from_title(title):
         cleaned_title = TrackRecipe._cleanup_title(title)
-        matches = _COMBINED_REGEX.search(cleaned_title)
+        matches = util.regexps.COMBINED_TRACK_REGEX.search(cleaned_title)
         return TrackRecipe.from_track_dict(defaultdict(None, matches.groupdict()))
 
     @staticmethod
@@ -58,13 +51,18 @@ class TrackRecipe:
             track=track_dict['track']
         )
 
-    def __init__(self, artist, title, track):
+    def __init__(self, artist=None, title=None, track=None, spotify_id=None):
         self.artist = artist
         self.title = title
         self.track = track
+        self.spotify_id = spotify_id
 
     def __repr__(self):
-        return f'track={self.track}, artist={self.artist}, title={self.title}'
+        representation = ['TrackRecipe:']
+        for key in self.__dict__.keys():
+            if self.__getattribute__(key) is not None:
+                representation += [f'{key}={self.__getattribute__(key)}']
+        return ' '.join(representation)
 
     def get_query(self):
         """

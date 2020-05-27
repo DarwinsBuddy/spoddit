@@ -51,8 +51,7 @@ def main(argv=None):
             tracks = session.spotify_session.search_tracks(
                 links_extracted_tracks + title_extracted_tracks
             )
-            # spotify_tracks = links['spotify']
-            # TODO extract spotify track ID from spotify track links
+
             if args.dry_run:
                 logger.debug('[DRY] Skipping adding tracks to playlist')
             else:

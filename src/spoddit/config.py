@@ -1,14 +1,17 @@
 import argparse
-import re
 import sys
 from configparser import ConfigParser
 import logging
 from logging.config import fileConfig
 from pathlib import Path
 
+from spoddit.util.regexps import SUBREDDIT_REGEX
+
+
+# TODO: Introduce a way to enable specific scraper functionality (title, youtube-link, spotify-link, etc.)
+#       individually for every r/* section
 
 def parse_args(argv):
-    # TODO args should be handled here to e.g. make a partial function for dry-running
     # TODO: Integrate arguments to overwrite specific options of our config
     # import config
     # Do argv default this way, as doing it in the functional
@@ -56,7 +59,6 @@ def dry_handle(dry_run, function_handle, *args, **kwargs):
 
 _CONFIG_PATH = 'spoddit.conf'
 _DEFAULT_SUBREDDIT_LIMIT = 50
-_SUBREDDIT_REGEX = r'r\/(.*)'
 
 defaults = {
     'General': {
@@ -92,7 +94,7 @@ for section in _config.sections():
     if section.startswith('r/'):
         if _config.has_option(section, 'playlist_name'):
             # get raw name of subreddit
-            match = re.match(_SUBREDDIT_REGEX, section)
+            match = SUBREDDIT_REGEX.match(section)
             if match is not None:
                 subreddit = list(match.groups()).pop()
 
@@ -107,7 +109,7 @@ for section in _config.sections():
                 logger.debug(f'Mapping found - Subreddit:{section} Playlist:{scraper_map[subreddit]["playlist_name"]}')
             else:
                 logger.error(f'Congratulations. You spotted a thought to be impossible error.')
-                logger.error(f'{section} both starts with "r/" and does not match regex "{_SUBREDDIT_REGEX}')
+                logger.error(f'{section} both starts with "r/" and does not match regex "{SUBREDDIT_REGEX}')
                 logger.error(f'Contact the maintainer of this package on github and get yourself a pat on the back')
         else:
             logger.warning(f'Section {section} missing option "playlist_name". Skipping.')
