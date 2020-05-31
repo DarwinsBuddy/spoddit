@@ -16,7 +16,7 @@ def main(argv=None):
     # TODO maybe there is a way to make this publicly available after arg parse
     dry = partial(dry_handle, (args.dry_run or False))
 
-    fileConfig('log.conf')
+    fileConfig('config/log.conf')
     logger = logging.getLogger()
 
     if args.dry_run:

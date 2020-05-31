@@ -3,10 +3,10 @@ import logging
 from logging.config import fileConfig
 from pathlib import Path
 
-fileConfig('log.conf')
+fileConfig('config/log.conf')
 logger = logging.getLogger(__name__)
 
-_SECRETS_PATH = '.secrets.conf'
+_SECRETS_PATH = 'config/.secrets.conf'
 
 _secrets = None
 logger.debug(f'<<<<<<<< {_SECRETS_PATH} >>>>>>>>')

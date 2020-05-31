@@ -43,7 +43,7 @@ def parse_args(argv):
     return args
 
 
-fileConfig('log.conf')
+fileConfig('config/log.conf')
 logger = logging.getLogger(__name__)
 
 
@@ -57,7 +57,7 @@ def dry_handle(dry_run, function_handle, *args, **kwargs):
         return function_handle(*args, **expected)
 
 
-_CONFIG_PATH = 'spoddit.conf'
+_CONFIG_PATH = 'config/spoddit.conf'
 _DEFAULT_SUBREDDIT_LIMIT = 50
 
 defaults = {

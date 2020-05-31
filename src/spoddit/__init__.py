@@ -6,11 +6,15 @@ from .reddit import RedditSession
 from .spotify import SpotifySession
 
 
-_DEFAULT_CONFIG_PATH = './spoddit.conf'
+_DEFAULT_CONFIG_PATH = 'config/spoddit.conf'
 logger = logging.getLogger(__name__)
 
 
 class TrackRecipe:
+    """
+    A recipe for a track forming up the base for a lookup or search query
+    to find it on e.g. spotify
+    """
 
     @staticmethod
     def _cleanup_title(title):

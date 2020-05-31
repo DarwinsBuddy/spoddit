@@ -43,4 +43,4 @@ for more details.
 
 # License
 © Christoph Spörk 2020
-As for now I'll go with GNU GPL v3, but I am not sure yet.
+As for now I'll go with GNU LGPL v3+, but I am not sure yet.
